@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panorama 360 con Vue 3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://82mou.github.io/threejs/js/OrbitControls.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Contenedor donde se mostrará el panorama -->
+        <div ref="container"></div>
+    </div>
+
+    <script>
+        
+        const { createApp, ref, onMounted, onUnmounted } = Vue
+        
+        createApp({
+            setup() {
+                const container = ref(null);
+                let w = window.innerWidth
+                let h = window.innerHeight
+
+                onMounted(() => {
+                    initPanorama(container.value);
+                   
+                });
+
+                const initPanorama = (container) => {
+                    // Creamos una nueva escena
+                    const scene = new THREE.Scene();
+
+                    // Creamos una cámara para ver la escena
+                    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+                    // Creamos un renderizador WebGL
+                    const renderer = new THREE.WebGLRenderer();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    container.appendChild(renderer.domElement);
+
+                    // Creamos una esfera que representará nuestro panorama
+                    const geometry = new THREE.SphereGeometry(500, 60, 40);
+                    geometry.scale(-1, 1, 1); // Invertimos la geometría para que se muestre correctamente
+                    const texture = new THREE.TextureLoader().load('5090E_1.jpg');
+                    const material = new THREE.MeshBasicMaterial({ map: texture });
+                    const sphere = new THREE.Mesh(geometry, material);
+                    scene.add(sphere);
+
+                    // Configuramos la posición inicial de la cámara para que apunte al centro de la esfera
+                    camera.position.set(10, 0, 0); // La cámara está en el centro de la esfera
+                    camera.lookAt(sphere.position); // La cámara apunta al centro de la esfera
+
+                    // Agregamos controles para mover la cámara
+                    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                    controls.rotateSpeed = 0.5; // Velocidad de rotación reducida
+                    controls.zoomSpeed = 0.5; // Velocidad de zoom reducida
+
+                    function resize() {
+                        h = window.innerHeight;
+                        w = window.innerWidth;
+                        camera.aspect = w / h;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(w, h)
+
+                    }
+
+                    // Creamos una función de renderizado
+                    const animate = () => {
+                        requestAnimationFrame(animate);
+                        controls.update(); // Actualizamos los controles de la cámara
+                        renderer.render(scene, camera); // Renderizamos la escena
+                    };
+
+                    animate();
+                    window.addEventListener("resize", resize)
+                    
+
+                    onUnmounted(() => {
+                        controls.dispose();
+                    });
+                };
+
+                return {
+                    container
+                };
+            }
+
+        }).mount('#app')
+
+        // const App = {
+        // };
+
+        // Vue.createApp(App).mount('#app');
+    </script>
+</body>
+
+</html>
